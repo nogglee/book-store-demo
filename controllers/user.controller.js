@@ -64,12 +64,36 @@ const signin = (req, res) =>
 
 const requestPasswordReset = (req, res) =>
 {
-    res.json('비밀번호 초기화 요청')
+    const { email } = req.body;
+
+    conn.query
+    (
+        'SELECT * FROM users WHERE email = ?', [ email ],
+        (err, results) => 
+        {
+            if (handleDbError(res, err)) return;
+
+            if(results.length) { return res.status(StatusCodes.OK).json({ email : email }) }
+            else { return res.status(StatusCodes.UNAUTHORIZED).json({ message : '해당 이메일로 가입된 내역이 없습니다.' }) }
+        }
+    )
 };
 
 const passwordReset = (req, res) =>
 {
-    res.json('비밀번호 초기화')
+    const { email, password } = req.body;
+
+    conn.query
+    (
+        'UPDATE users SET password = ? WHERE email = ?', [ password, email ],
+        (err, results) => 
+        {
+            if(handleDbError(res, err)) return;
+            
+            if(results.affectedRows == 0) { return res.status(StatusCodes.BAD_REQUEST).end(); }
+            else { return res.status(StatusCodes.OK).json({ message : '비밀번호 변경에 성공했습니다.' }) }
+        }
+    )
 };
 
 module.exports = { signup, signin, requestPasswordReset, passwordReset };
