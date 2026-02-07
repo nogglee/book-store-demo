@@ -1,14 +1,18 @@
 const conn = require('../mariadb');
 const handleDbError = require('../utils/handleDbError');
 const { StatusCodes } = require('http-status-codes');
+const jwt = require('jsonwebtoken')
+const dotenv = require('dotenv')
+
+dotenv.config();
 
 const signup = (req, res) =>
 {
-    const {email, name, password} = req.body;
+    const { email, name, password } = req.body;
 
     conn.query
     (
-        'SELECT * FROM users WHERE email = ?', [email],
+        'SELECT * FROM users WHERE email = ?', [ email ],
         (err, results) => 
         {
             if (handleDbError(res, err)) return;
@@ -16,7 +20,7 @@ const signup = (req, res) =>
 
             conn.query
             (
-                'INSERT INTO users (email, name, password) VALUES (?, ?, ?)', [email, name, password],
+                'INSERT INTO users (email, name, password) VALUES (?, ?, ?)', [ email, name, password ],
                 (err, results) => 
                 {
                     if (handleDbError(res, err)) return;
@@ -29,11 +33,32 @@ const signup = (req, res) =>
 
 const signin = (req, res) => 
 {
-    const {email, password} = req.body;
+    const { email, password } = req.body;
 
     conn.query
     (
+        'SELECT * FROM users WHERE email = ?', [ email ],
+        (err, results) => 
+        {
+            if(handleDbError(res, err)) return;
+            const currentUser = results[0]
+            
+            if(currentUser && currentUser.password == password)
+            {
+                const token = jwt.sign
+                (
+                    { email: currentUser.email },
+                    process.env.PRIVATE_KEY,
+                    { expiresIn : '5m', issuer : "nogglee"}
+                );
 
+                res.cookie("token", token, { httpOnly : true })
+                console.log("token: ", token)
+
+                return res.status(StatusCodes.OK).json(results)
+            }
+            else { return res.status(StatusCodes.UNAUTHORIZED).json({ message : '아이디나 비밀번호를 확인해 주세요.' }) }
+        }
     )
 };
 
