@@ -1,14 +1,18 @@
 const conn = require('../mariadb');
 const handleDbError = require('../utils/handleDbError');
 const { StatusCodes } = require('http-status-codes');
-const jwt = require('jsonwebtoken')
-const dotenv = require('dotenv')
+const crypto = require('crypto');
+const jwt = require('jsonwebtoken');
+const dotenv = require('dotenv');
 
 dotenv.config();
 
 const signup = (req, res) =>
 {
     const { email, name, password } = req.body;
+
+    const salt = crypto.randomBytes(10).toString('base64');
+    const hashPassword =  crypto.pbkdf2Sync(password, salt, 10000, 10, 'sha512').toString('base64');
 
     conn.query
     (
@@ -20,7 +24,7 @@ const signup = (req, res) =>
 
             conn.query
             (
-                'INSERT INTO users (email, name, password) VALUES (?, ?, ?)', [ email, name, password ],
+                'INSERT INTO users (email, name, password, salt) VALUES (?, ?, ?, ?)', [ email, name, hashPassword, salt ],
                 (err, results) => 
                 {
                     if (handleDbError(res, err)) return;
@@ -42,8 +46,12 @@ const signin = (req, res) =>
         {
             if(handleDbError(res, err)) return;
             const currentUser = results[0]
+
+            if(!currentUser) { return res.status(StatusCodes.UNAUTHORIZED).json({ message : '아이디 또는 비밀번호를 확인해 주세요.' }) }
             
-            if(currentUser && currentUser.password == password)
+            const hashPassword =  crypto.pbkdf2Sync(password, currentUser.salt, 10000, 10, 'sha512').toString('base64');
+        
+            if(currentUser.password == hashPassword)
             {
                 const token = jwt.sign
                 (
@@ -57,7 +65,7 @@ const signin = (req, res) =>
 
                 return res.status(StatusCodes.OK).json(results)
             }
-            else { return res.status(StatusCodes.UNAUTHORIZED).json({ message : '아이디나 비밀번호를 확인해 주세요.' }) }
+            else { return res.status(StatusCodes.UNAUTHORIZED).json({ message : '아이디 또는 비밀번호를 확인해 주세요.' }) }
         }
     )
 };
@@ -83,9 +91,12 @@ const passwordReset = (req, res) =>
 {
     const { email, password } = req.body;
 
+    const salt = crypto.randomBytes(10).toString('base64');
+    const hashPassword =  crypto.pbkdf2Sync(password, salt, 10000, 10, 'sha512').toString('base64');
+
     conn.query
     (
-        'UPDATE users SET password = ? WHERE email = ?', [ password, email ],
+        'UPDATE users SET password = ?, salt = ? WHERE email = ?', [ hashPassword, salt, email ],
         (err, results) => 
         {
             if(handleDbError(res, err)) return;
