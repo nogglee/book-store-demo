@@ -42,7 +42,7 @@ const bookDetail = (req, res) =>
 
     conn.query
     (
-        'SELECT * FROM books WHERE id = ?', [id],
+        'SELECT * FROM books LEFT JOIN category ON books.category_id = category.id WHERE books.id = ?', [id],
         (err, results) =>
         {
             if(handleDbError(res, err)) return;
