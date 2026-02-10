@@ -9,6 +9,7 @@ app.listen(process.env.PORT, console.log(`🚀 ${process.env.PORT} 포트에서 
 const userRouter = require('./routes/users');
 const bookRouter = require('./routes/books');
 const categoryRouter = require('./routes/category');
+const likeRouter = require('./routes/likes');
 
 app.use
 (
@@ -22,3 +23,4 @@ app.use
 app.use('/users', userRouter);
 app.use('/books', bookRouter);
 app.use('/category', categoryRouter);
+app.use('/like', likeRouter);
