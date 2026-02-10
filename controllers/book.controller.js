@@ -25,7 +25,7 @@ const allBooks = (req, res) =>
     const safePage = Math.max(1, pageNumber);
     const offset = limit * (safePage - 1);
 
-    let sql = 'SELECT * FROM books'
+    let sql = 'SELECT *, (SELECT count(*) AS liked_book FROM likes WHERE liked_book_id = books.id) AS likes FROM books'
     let values = [];
 
     if(category_id) 
