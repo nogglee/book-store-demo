@@ -1,7 +1,5 @@
 const express = require("express");
 const router = express.Router();
-const validate = require('../middleware/validate');
-const { body } = require('express-validator');
 const { allBooks, bookDetail } = require('../controllers/book.controller');
 
 router.use(express.json());
