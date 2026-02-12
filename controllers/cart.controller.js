@@ -20,11 +20,14 @@ const addToCart = (req, res) =>
 
 const getCartItems = (req, res) =>
 {
-    const user_id = parseInt(req.body.user_id);
+    const { user_id, selected } = req.body;
 
     conn.query
     (
-        'SELECT cartItems.id, book_id, title, summary, quantity, price FROM cartItems LEFT JOIN books ON cartItems.book_id = books.id WHERE user_id = ?', [user_id],
+        `SELECT cartItems.id, book_id, title, summary, quantity, price 
+        FROM cartItems 
+            LEFT JOIN books ON cartItems.book_id = books.id 
+        WHERE user_id = ? AND cartItems.id IN (?)`, [user_id, selected ],
         (err, results) =>
         {
             if(handleDbError(res, err)) return;
@@ -37,12 +40,11 @@ const getCartItems = (req, res) =>
 
 const removeCartItems = (req, res) => 
 {
-    const book_id = req.params.id
-    const { user_id } = req.body
+    const {id} = req.params;
 
     conn.query
     (
-        'DELETE FROM cartItems WHERE user_id = ? AND book_id = ?', [user_id, book_id],
+        'DELETE FROM cartItems WHERE id = ?', [id],
         (err, results) => 
         {
             if(handleDbError(res, err)) return;
