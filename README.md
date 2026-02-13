@@ -11,10 +11,13 @@ REST API 기반 도서 쇼핑몰 백엔드 프로젝트입니다.
 
 ## 프로젝트 목적
 
-- REST API 설계 감각 기르기
-- Express 미들웨어 구조 이해하기
-- JWT 기반 인증/인가 흐름 구현하기
-- validation → controller → DB 계층 분리하여 설계하기
+이 프로젝트는 아래 항목에 대해 학습·정리하기 위한 실습 프로젝트입니다.
+
+- REST API 설계 감각
+- Express 미들웨어 구조 이해
+- JWT 기반 인증/인가 흐름
+- validation → controller → DB 계층 분리
+- 실무에 가까운 요청 처리 파이프라인 구성
 
 ---
 
@@ -30,15 +33,13 @@ REST API 기반 도서 쇼핑몰 백엔드 프로젝트입니다.
 
 ## 전체 구조
 
-refactoring 예정
-
 ```text
 book-store-demo
 ├── bin/www            # 서버 실행 엔트리 (포트, 환경변수 로드)
-├── routes             # 도메인별 라우터
-├── controllers        # 비즈니스 로직
-├── middlewares        # validate, auth 등 공통 미들웨어
-├── db                 # DB 접근 계층
+├── routes/            # 도메인별 라우터
+├── controllers/       # 비즈니스 로직
+├── middlewares/       # validate, auth 등 공통 미들웨어
+├── db/                # DB 접근 계층
 ├── app.js             # Express 진입점
 ├── .env               # 환경 변수
 └── package.json
