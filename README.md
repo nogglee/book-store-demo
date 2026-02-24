@@ -11,15 +11,10 @@ REST API 기반 도서 쇼핑몰 백엔드 프로젝트입니다.
 
 ## 프로젝트 목적
 
-이 프로젝트는 단순 CRUD 실습이 아니라,
-
-- REST API 설계 감각
-- Express 미들웨어 구조 이해
-- JWT 기반 인증/인가 흐름
-- validation → controller → DB 계층 분리
-- 실무에 가까운 요청 처리 파이프라인 구성
-
-을 학습·정리하기 위한 개인 프로젝트입니다.
+- REST API 설계 감각 기르기
+- Express 미들웨어 구조 이해하기
+- JWT 기반 인증/인가 흐름 구현하기
+- validation → controller → DB 계층 분리하여 설계하기
 
 ---
 
@@ -43,7 +38,7 @@ book-store-demo
 ├── routes             # 도메인별 라우터
 ├── controllers        # 비즈니스 로직
 ├── middlewares        # validate, auth 등 공통 미들웨어
-├── models             # DB 접근 계층
+├── db                 # DB 접근 계층
 ├── app.js             # Express 진입점
 ├── .env               # 환경 변수
 └── package.json
@@ -82,7 +77,4 @@ JWT는 인증 수단이자 인가 판단의 근거 데이터로 사용됩니다.
 ## 향후 계획
 
 - React 프론트엔드 연동
-- 장바구니 기능
-- 주문 API
 - Refresh Token 적용
-- 역할 기반 권한 분리 (admin / user)
