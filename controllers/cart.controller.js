@@ -1,14 +1,15 @@
 const conn = require('../db/mariadb');
+const ensureAuthorization = require('../utils/ensureAutorization');
 const { StatusCodes } = require('http-status-codes');
 const handleDbError = require('../utils/handleDbError');
 
 const addToCart = (req, res) => 
 {
-    const { user_id, book_id, quantity } = req.body;
+    const { book_id, quantity } = req.body;
 
     conn.query
     (
-        'INSERT INTO cartItems (user_id, book_id, quantity) VALUES (?, ?, ?)', [user_id, book_id, quantity],
+        'INSERT INTO cartItems (user_id, book_id, quantity) VALUES (?, ?, ?)', [ensureAuthorization(req).id, book_id, quantity],
         (err, results) => 
         {
             if(handleDbError(res, err)) return;
@@ -20,14 +21,14 @@ const addToCart = (req, res) =>
 
 const getCartItems = (req, res) =>
 {
-    const { user_id, selected } = req.body;
+    const { selected } = req.body;
 
     conn.query
     (
         `SELECT cartItems.id, book_id, title, summary, quantity, price 
         FROM cartItems 
             LEFT JOIN books ON cartItems.book_id = books.id 
-        WHERE user_id = ? AND cartItems.id IN (?)`, [user_id, selected ],
+        WHERE user_id = ? AND cartItems.id IN (?)`, [ensureAuthorization(req).id, selected ],
         (err, results) =>
         {
             if(handleDbError(res, err)) return;
@@ -40,11 +41,11 @@ const getCartItems = (req, res) =>
 
 const removeCartItems = (req, res) => 
 {
-    const {id} = req.params;
+    const { cartItemId } = req.params.id;
 
     conn.query
     (
-        'DELETE FROM cartItems WHERE id = ?', [id],
+        'DELETE FROM cartItems WHERE id = ?', [cartItemId],
         (err, results) => 
         {
             if(handleDbError(res, err)) return;
