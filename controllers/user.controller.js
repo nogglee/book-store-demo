@@ -57,11 +57,10 @@ const signin = (req, res) =>
                 (
                     { id : currentUser.id, email: currentUser.email },
                     process.env.PRIVATE_KEY,
-                    { expiresIn : '5m', issuer : "nogglee"}
+                    { expiresIn : '60m', issuer : "nogglee"}
                 );
 
                 res.cookie("token", token, { httpOnly : true })
-                console.log("token: ", token)
 
                 return res.status(StatusCodes.OK).json(results)
             }
