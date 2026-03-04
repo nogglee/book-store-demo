@@ -55,7 +55,7 @@ const signin = (req, res) =>
             {
                 const token = jwt.sign
                 (
-                    { email: currentUser.email },
+                    { id : currentUser.id, email: currentUser.email },
                     process.env.PRIVATE_KEY,
                     { expiresIn : '5m', issuer : "nogglee"}
                 );
