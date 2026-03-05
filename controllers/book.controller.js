@@ -55,20 +55,20 @@ const bookDetail = (req, res) =>
     const book_id = parseInt(req.params.id);
     
     let sql = `SELECT *, 
-    (SELECT count(*) AS liked_book FROM likes WHERE liked_book_id = books.id) AS likes,`;
-    let values = [book_id];
+                (SELECT count(*) AS liked_book FROM likes WHERE liked_book_id = books.id) AS likes,
+                (SELECT category_name FROM category WHERE books.category_id = category.id) AS category`;
+    let values = [];
     
     if(req.user)
     {
         const user_id = req.user.id;
-        
-        sql += `(SELECT EXISTS (SELECT * FROM likes WHERE user_id = ? AND liked_book_id = ?)) AS isLiked,`;
-        values.unshift(user_id, book_id);
+
+        sql += `, (SELECT EXISTS (SELECT * FROM likes WHERE user_id = ? AND liked_book_id = books.id)) AS isLiked`;
+        values.push(user_id);
     }
 
-    sql += `    (SELECT category_name FROM category WHERE books.category_id = category.id) AS category
-            FROM books 
-            WHERE books.id = ?`;
+    sql += ` FROM books WHERE books.id = ?`;
+    values.push(book_id);
 
     conn.query
     (
