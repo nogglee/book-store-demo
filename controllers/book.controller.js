@@ -53,17 +53,26 @@ const allBooks = (req, res) =>
 const bookDetail = (req, res) =>
 {
     const book_id = parseInt(req.params.id);
-    const { user_id } = req.body;
+    
+    let sql = `SELECT *, 
+                (SELECT count(*) AS liked_book FROM likes WHERE liked_book_id = books.id) AS likes,
+                (SELECT category_name FROM category WHERE books.category_id = category.id) AS category`;
+    let values = [];
+    
+    if(req.user)
+    {
+        const user_id = req.user.id;
+
+        sql += `, (SELECT EXISTS (SELECT * FROM likes WHERE user_id = ? AND liked_book_id = books.id)) AS isLiked`;
+        values.push(user_id);
+    }
+
+    sql += ` FROM books WHERE books.id = ?`;
+    values.push(book_id);
 
     conn.query
     (
-        `SELECT *, 
-            (SELECT count(*) AS liked_book FROM likes WHERE liked_book_id = books.id) AS likes,
-            (SELECT EXISTS (SELECT * FROM likes WHERE user_id = ? AND liked_book_id = books.id)) AS isLiked,
-            (SELECT category_name FROM category WHERE books.category_id = category.id) AS category
-        FROM books 
-        WHERE books.id = ?`,
-        [user_id, book_id],
+        sql, values,
         (err, results) =>
         {
             if(handleDbError(res, err)) return;
