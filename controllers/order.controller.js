@@ -71,8 +71,6 @@ const getOrders = async (req, res) =>
             dataString: true
         });
         
-        const userId = req.user.id;
-
         let sql = `SELECT orders.id, created_at, address, receiver, contact, book_title, total_quantity, total_price
                     FROM orders LEFT JOIN delivery
                     ON orders.delivery_id = delivery.id`;
@@ -97,7 +95,6 @@ const getOrderDetail = async (req, res) =>
         });
         
         const order_id = req.params.id;
-        console.log(id);
 
         let sql = `SELECT book_id, title, author, price, quantity
                     FROM orderedBook LEFT JOIN books
