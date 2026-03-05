@@ -26,22 +26,20 @@ const allBooks = (req, res) =>
     const offset = limit * (safePage - 1);
 
     let sql = `SELECT *, (SELECT count(*) AS liked_book FROM likes WHERE liked_book_id = books.id) AS likes FROM books`
+    let conditions = [];
     let values = [];
 
-    if(category_id) 
-    { 
-        if(newest){ sql += ' WHERE category_id = ? AND pub_date BETWEEN DATE_SUB(NOW(), INTERVAL 1 MONTH) AND NOW()'; values.push(category_id)  }
-        else { sql += ' WHERE category_id = ?'; values.push(category_id)  }
-    }
-    else if(newest) { sql += ' WHERE pub_date BETWEEN DATE_SUB(NOW(), INTERVAL 1 MONTH) AND NOW()'; }
+    if(category_id) { conditions.push('category_id = ?'); values.push(category_id) }
+    if(newest) { conditions.push('pub_date BETWEEN DATE_SUB(NOW(), INTERVAL 1 MONTH) AND NOW()') }
+
+    if(conditions.length > 0) { sql += ' WHERE ' + conditions.join(' AND ') };
 
     sql += ' LIMIT ? OFFSET ?';
     values.push(limit, offset);
     
     conn.query
     (
-        sql, values,
-        (err, results) =>
+        sql, values, (err, results) =>
         {
             if(handleDbError(res, err)) return;
             

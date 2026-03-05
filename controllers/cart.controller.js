@@ -21,28 +21,39 @@ const addToCart = (req, res) =>
 
 const getCartItems = (req, res) =>
 {
-    const { selected } = req.body;
+    const { selected } = req.body ?? {};
     const user_id = req.user.id;
+
+    let sql = `SELECT cartItems.id, book_id, title, summary, quantity, price 
+                FROM cartItems 
+                    LEFT JOIN books ON cartItems.book_id = books.id`;
+    
+    const conditions = ['user_id = ?'];
+    const values = [user_id];
+    
+    if(selected) 
+    { 
+        conditions.push('cartItems.id IN (?)');
+        values.push(selected); 
+        console.log("selected length : ", selected.length);
+    };
+    
+
+    sql += ` WHERE ${conditions.join(' AND ')}`;
 
     conn.query
     (
-        `SELECT cartItems.id, book_id, title, summary, quantity, price 
-        FROM cartItems 
-            LEFT JOIN books ON cartItems.book_id = books.id 
-        WHERE user_id = ? AND cartItems.id IN (?)`, [user_id, selected ],
-        (err, results) =>
+        sql, values, (err, results) =>
         {
             if(handleDbError(res, err)) return;
-
             return res.status(StatusCodes.OK).json(results);
         }
     )
-
 }
 
 const removeCartItems = (req, res) => 
 {
-    const { cartItemId } = req.params.id;
+    const cartItemId = req.params.id;
 
     conn.query
     (
