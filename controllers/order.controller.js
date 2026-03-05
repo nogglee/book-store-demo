@@ -1,6 +1,5 @@
 const mariadb = require('mysql2/promise');
 const { StatusCodes } = require('http-status-codes');
-const connection = require('../db/mariadb');
 
 const order = async (req, res) => 
 {
@@ -15,7 +14,8 @@ const order = async (req, res) =>
             dataString: true
         });
     
-        const { items, delivery, totalQuantity, totalPrice, userId, firstBookTitle } = req.body;
+        const { items, delivery, totalQuantity, totalPrice, firstBookTitle } = req.body;
+        const userId = req.user.id;
     
         let delivery_id;
         let order_id;
@@ -71,7 +71,7 @@ const getOrders = async (req, res) =>
             dataString: true
         });
         
-        const { userId } = req.body;
+        const userId = req.user.id;
 
         let sql = `SELECT orders.id, created_at, address, receiver, contact, book_title, total_quantity, total_price
                     FROM orders LEFT JOIN delivery
@@ -96,7 +96,7 @@ const getOrderDetail = async (req, res) =>
             dataString: true
         });
         
-        const { id } = req.params;
+        const order_id = req.params.id;
         console.log(id);
 
         let sql = `SELECT book_id, title, author, price, quantity
@@ -104,7 +104,7 @@ const getOrderDetail = async (req, res) =>
                     ON orderedBook.book_id = books.id
                     WHERE order_id = ?`;
 
-        let [rows, fields] = await conn.execute(sql, [id]);
+        let [rows, fields] = await conn.execute(sql, [order_id]);
         return res.status(StatusCodes.OK).json(rows);
     }
     catch (err) { console.error(err); res.status(StatusCodes.BAD_REQUEST).json({ message: 'DB 오류 발생' }) }
