@@ -53,7 +53,7 @@ const allBooks = (req, res) =>
 const bookDetail = (req, res) =>
 {
     const book_id = parseInt(req.params.id);
-    const { user_id } = req.body;
+    const user_id = req.user.id;
 
     conn.query
     (
