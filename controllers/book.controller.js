@@ -4,6 +4,7 @@ const { StatusCodes } = require('http-status-codes');
 
 const allBooks = (req, res) =>
 {
+    let allBooksRes = {};
     const { category_id, newest } = req.query;
     
     // page number 기반 pagination 구현을 위해 limit과 current_page를 query string으로 입력 받으면
@@ -21,33 +22,58 @@ const allBooks = (req, res) =>
     const rawPage = parseInt(req.query.current_page);
     const pageNumber = Number.isInteger(rawPage) ? rawPage : 1;
 
-    // pageNumber는 1부터 시작하므로, 최솟값 1을 보장한다.
-    const safePage = Math.max(1, pageNumber);
-    const offset = limit * (safePage - 1);
-
-    let sql = `SELECT *, (SELECT count(*) AS liked_book FROM likes WHERE liked_book_id = books.id) AS likes FROM books`
     let conditions = [];
     let values = [];
 
     if(category_id) { conditions.push('category_id = ?'); values.push(category_id) }
     if(newest) { conditions.push('pub_date BETWEEN DATE_SUB(NOW(), INTERVAL 1 MONTH) AND NOW()') }
 
-    if(conditions.length > 0) { sql += ' WHERE ' + conditions.join(' AND ') };
+    // COUNT(*) 먼저 조회해서 totalPage를 계산한 뒤, current_page를 최대값까지 보정한다.
+    let countSql = 'SELECT COUNT(*) AS totalQuantity FROM books';
+    if(conditions.length > 0) { countSql += ' WHERE ' + conditions.join(' AND ') };
 
-    sql += ' LIMIT ? OFFSET ?';
-    values.push(limit, offset);
-    
     conn.query
     (
-        sql, values, (err, results) =>
+        countSql, values, (err, countResults) =>
         {
             if(handleDbError(res, err)) return;
+
+            const totalQuantity = countResults[0]?.totalQuantity ?? 0;
+            if(totalQuantity === 0) { return res.status(StatusCodes.NOT_FOUND).json({ message : '등록된 도서가 없습니다.' }) }
+
+            const totalPage = Math.ceil(totalQuantity / limit);
             
-            if(results.length) { return res.status(StatusCodes.OK).json(results) }
-            else { return res.status(StatusCodes.NOT_FOUND).json({ message : '등록된 도서가 없습니다.' }) }
+            // pageNumber는 1부터 시작하므로, 최솟값 1을 보장하고 최댓값은 totalPage로 제한한다.
+            const safePage = Math.max(1, Math.min(pageNumber, totalPage));
+            const offset = limit * (safePage - 1);
+
+            let dataSql = 'SELECT *, (SELECT count(*) AS liked_book FROM likes WHERE liked_book_id = books.id) AS likes FROM books';
+            if(conditions.length > 0) { dataSql += ' WHERE ' + conditions.join(' AND ') };
+
+            dataSql += ' LIMIT ? OFFSET ?';
+
+            // WHERE 조건 (필터)의 확장성을 위해 category_id를 ...values로 사용
+            const dataValues = [...values, limit, offset];
+
+            conn.query
+            (
+                dataSql, dataValues, (err, results) =>
+                {
+                    if(handleDbError(res, err)) return;
+
+                    allBooksRes.books = results;
+
+                    allBooksRes.pagination =
+                    {
+                        totalQuantity: totalQuantity,
+                        totalPage: totalPage,
+                    };
+
+                    return res.status(StatusCodes.OK).json(allBooksRes);
+                }
+            )
         }
     )
-    
 }
 
 const bookDetail = (req, res) =>
