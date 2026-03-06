@@ -15,7 +15,7 @@ const order = async (req, res) =>
         });
     
         const { items, delivery, totalQuantity, totalPrice, firstBookTitle } = req.body;
-        const userId = req.user.id;
+        const user_id = req.user.id;
     
         let delivery_id;
         let order_id;
@@ -28,7 +28,7 @@ const order = async (req, res) =>
         delivery_id = results.insertId;
     
         sql = `INSERT INTO orders (book_title, total_quantity, total_price, user_id, delivery_id) VALUES (?, ?, ?, ?, ?)`;
-        values = [ firstBookTitle, totalQuantity, totalPrice, userId, delivery_id ];
+        values = [ firstBookTitle, totalQuantity, totalPrice, user_id, delivery_id ];
         
         [results] = await conn.execute(sql, values);
         order_id = results.insertId;
@@ -71,11 +71,14 @@ const getOrders = async (req, res) =>
             dataString: true
         });
         
+        const user_id = req.user.id;
+        
         let sql = `SELECT orders.id, created_at, address, receiver, contact, book_title, total_quantity, total_price
                     FROM orders LEFT JOIN delivery
-                    ON orders.delivery_id = delivery.id`;
+                    ON orders.delivery_id = delivery.id
+                    WHERE orders.user_id = ?`;
 
-        let [rows, fields] = await conn.execute(sql);
+        let [rows, fields] = await conn.execute(sql, [user_id]);
 
         rows.map
         (
@@ -112,13 +115,17 @@ const getOrderDetail = async (req, res) =>
         });
         
         const order_id = req.params.id;
+        const user_id = req.user.id;
 
         let sql = `SELECT book_id, title, author, price, quantity
-                    FROM orderedBook LEFT JOIN books
-                    ON orderedBook.book_id = books.id
-                    WHERE order_id = ?`;
+                    FROM orderedBook 
+                    LEFT JOIN books
+                        ON orderedBook.book_id = books.id
+                    LEFT JOIN orders
+                        ON orderedBook.order_id = orders.id
+                    WHERE orderedBook.order_id = ? AND orders.user_id = ?`;
 
-        let [rows, fields] = await conn.execute(sql, [order_id]);
+        let [rows, fields] = await conn.execute(sql, [order_id, user_id]);
 
         rows.map
         (
