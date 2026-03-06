@@ -28,7 +28,8 @@ const signup = (req, res) =>
                 (err, results) => 
                 {
                     if (handleDbError(res, err)) return;
-                    else { return res.status(StatusCodes.CREATED).json({ message : '회원가입에 성공했습니다!' }) }
+                    if(results.affectedRows) return res.status(StatusCodes.CREATED).json({ message : '회원가입에 성공했습니다!' });
+                    else return res.status(StatusCodes.BAD_REQUEST.json({ message : '회원가입에 실패했습니다. 다시 시도해 주세요.' }));
                 }
             )
         }
@@ -47,7 +48,7 @@ const signin = (req, res) =>
             if(handleDbError(res, err)) return;
             const currentUser = results[0]
 
-            if(!currentUser) { return res.status(StatusCodes.UNAUTHORIZED).json({ message : '아이디 또는 비밀번호를 확인해 주세요.' }) }
+            if(!currentUser) return res.status(StatusCodes.UNAUTHORIZED).json({ message : '아이디 또는 비밀번호를 확인해 주세요.' });
             
             const hashPassword =  crypto.pbkdf2Sync(password, currentUser.salt, 10000, 10, 'sha512').toString('base64');
         
@@ -80,8 +81,8 @@ const requestPasswordReset = (req, res) =>
         {
             if (handleDbError(res, err)) return;
 
-            if(results.length) { return res.status(StatusCodes.OK).json({ email : email }) }
-            else { return res.status(StatusCodes.UNAUTHORIZED).json({ message : '해당 이메일로 가입된 내역이 없습니다.' }) }
+            if(results.length) return res.status(StatusCodes.OK).json({ email : email });
+            else return res.status(StatusCodes.UNAUTHORIZED).json({ message : '해당 이메일로 가입된 내역이 없습니다.' });
         }
     )
 };
@@ -100,8 +101,8 @@ const passwordReset = (req, res) =>
         {
             if(handleDbError(res, err)) return;
             
-            if(results.affectedRows == 0) { return res.status(StatusCodes.BAD_REQUEST).end(); }
-            else { return res.status(StatusCodes.OK).json({ message : '비밀번호 변경에 성공했습니다.' }) }
+            if(results.affectedRows) return res.status(StatusCodes.OK).json({ message : '비밀번호 변경에 성공했습니다.' });
+            else return res.status(StatusCodes.BAD_REQUEST).end();
         }
     )
 };
