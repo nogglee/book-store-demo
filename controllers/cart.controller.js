@@ -46,6 +46,16 @@ const getCartItems = (req, res) =>
         sql, values, (err, results) =>
         {
             if(handleDbError(res, err)) return;
+
+            results.map
+            (
+                (result) => 
+                {
+                    result.bookId = result.book_id;
+                    delete result.book_id;
+                }
+            );
+
             return res.status(StatusCodes.OK).json(results);
         }
     )

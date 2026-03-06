@@ -60,6 +60,18 @@ const allBooks = (req, res) =>
                 dataSql, dataValues, (err, results) =>
                 {
                     if(handleDbError(res, err)) return;
+                    
+                    results.map
+                    (
+                        (result) => 
+                        {
+                            result.pubDate = result.pub_date;
+                            result.categoryId = result.category_id;
+
+                            delete result.pub_date;
+                            delete result.category_id;
+                        }
+                    );
 
                     allBooksRes.books = results;
 
@@ -102,7 +114,19 @@ const bookDetail = (req, res) =>
         (err, results) =>
         {
             if(handleDbError(res, err)) return;
-            
+
+            results.map
+            (
+                (result) => 
+                {
+                    result.pubDate = result.pub_date;
+                    result.categoryId = result.category_id;
+
+                    delete result.pub_date;
+                    delete result.category_id;
+                }
+            );
+
             if(results.length) { return res.status(StatusCodes.OK).json(results) }
             else { return res.status(StatusCodes.NOT_FOUND).json({ message : '등록된 도서가 없습니다.' }) }
         }

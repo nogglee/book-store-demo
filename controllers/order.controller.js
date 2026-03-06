@@ -76,6 +76,23 @@ const getOrders = async (req, res) =>
                     ON orders.delivery_id = delivery.id`;
 
         let [rows, fields] = await conn.execute(sql);
+
+        rows.map
+        (
+            (row) => 
+            {
+                row.createdAt = row.created_at;
+                row.bookTitle = row.book_title;
+                row.totalQuantity = row.total_quantity;
+                row.totalPrice = row.total_price;
+
+                delete row.created_at;
+                delete row.book_title;
+                delete row.total_quantity;
+                delete row.total_price;
+            }
+        );
+
         return res.status(StatusCodes.OK).json(rows);
     }
     catch (err) { console.error(err); res.status(StatusCodes.BAD_REQUEST).json({ message: 'DB 오류 발생' }) }
@@ -102,6 +119,16 @@ const getOrderDetail = async (req, res) =>
                     WHERE order_id = ?`;
 
         let [rows, fields] = await conn.execute(sql, [order_id]);
+
+        rows.map
+        (
+            (row) => 
+            {
+                row.bookId = row.book_id;
+                delete row.book_id;
+            }
+        );
+
         return res.status(StatusCodes.OK).json(rows);
     }
     catch (err) { console.error(err); res.status(StatusCodes.BAD_REQUEST).json({ message: 'DB 오류 발생' }) }
