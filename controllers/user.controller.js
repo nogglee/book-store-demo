@@ -1,4 +1,4 @@
-const conn = require('../db/mariadb');
+const conn = require('../models/mariadb');
 const handleDbError = require('../utils/handleDbError');
 const { StatusCodes } = require('http-status-codes');
 const crypto = require('crypto');
